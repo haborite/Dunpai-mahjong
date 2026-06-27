@@ -108,5 +108,5 @@ function normalizePlayerName(value, fallback) {
   return name || fallback;
 }
 
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 8788;
 server.listen(PORT, () => console.log(`盾麻雀サーバー起動: http://localhost:${PORT}`));
