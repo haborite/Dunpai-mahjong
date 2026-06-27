@@ -1,0 +1,5 @@
+# Keep generated and dependency data out of Codex/ripgrep workspace scans.
+node_modules/
+training_runs/
+training_logs/
+

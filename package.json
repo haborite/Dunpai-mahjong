@@ -1,0 +1,31 @@
+{
+  "name": "tate-mahjong",
+  "version": "1.0.0",
+  "description": "盾麻雀 - Shield Mahjong Web Game",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "npx nodemon server.js",
+    "test": "node --test",
+    "selfplay:log": "node scripts/export-selfplay-log.js",
+    "selfplay:dataset": "node scripts/build-supervised-dataset.js",
+    "selfplay:counterfactual-dataset": "node scripts/build-counterfactual-dataset.js",
+    "selfplay:train-value": "node scripts/train-candidate-value.js",
+    "selfplay:audit-rerank": "node scripts/audit-reranked-policy.js",
+    "selfplay:collect-disagreements": "node scripts/collect-policy-disagreements.js",
+    "selfplay:train-linear": "node scripts/train-linear-policy.js",
+    "selfplay:train-candidate": "node scripts/train-candidate-policy.js",
+    "selfplay:evaluate": "node scripts/evaluate-policy.js",
+    "selfplay:evaluate-parallel": "node scripts/evaluate-policy-parallel.js",
+    "selfplay:compare": "node scripts/compare-evaluations.js",
+    "selfplay:merge-evaluations": "node scripts/merge-evaluation-reports.js",
+    "selfplay:blend": "node scripts/blend-candidate-policies.js",
+    "selfplay:counterfactual": "node scripts/generate-counterfactual-data.js",
+    "selfplay:iterate": "node scripts/run-training-iteration.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "ws": "^8.14.2",
+    "uuid": "^9.0.0"
+  }
+}

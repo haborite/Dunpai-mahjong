@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>盾麻雀</title>
+<link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<!-- Lobby -->
+<div id="lobby">
+  <div class="lobby-box">
+    <h1>盾麻雀</h1>
+    <p class="subtitle">Shield Mahjong</p>
+    <div class="form-group">
+      <label>プレイヤー名</label>
+      <input type="text" id="playerName" value="プレイヤー" maxlength="12">
+    </div>
+    <div class="room-settings">
+      <div class="room-settings-title">部屋設定</div>
+      <label class="room-setting-check">
+        <input type="checkbox" id="settingForceOpenShieldsOnRiichi">
+        立直・オープン立直時に盾牌を全オープン
+      </label>
+      <label class="room-setting-row">
+        <span>赤ドラ</span>
+        <select id="settingRedDoraNumber">
+          <option value="5">赤5</option>
+          <option value="7" selected>赤7</option>
+        </select>
+      </label>
+    </div>
+    <div class="lobby-actions">
+      <button id="btnCreate" class="btn btn-primary">部屋を作成</button>
+      <div class="join-row">
+        <input type="text" id="roomIdInput" placeholder="部屋ID" maxlength="6" style="text-transform:uppercase">
+        <button id="btnJoin" class="btn btn-secondary">参加</button>
+      </div>
+    </div>
+    <div id="lobbyStatus" class="status-msg"></div>
+  </div>
+</div>
+
+<!-- Waiting Room -->
+<div id="waitingRoom" style="display:none">
+  <div class="lobby-box">
+    <h2>待機中</h2>
+    <p>部屋ID: <strong id="displayRoomId"></strong></p>
+    <div id="playerList"></div>
+    <div id="waitStatus" class="status-msg"></div>
+    <button id="btnStart" class="btn btn-primary" style="display:none">ゲーム開始</button>
+    <button id="btnFillNpc" class="btn btn-secondary" style="display:none">NPC補充して開始</button>
+  </div>
+</div>
+
+<!-- Shield Selection -->
+<div id="shieldSelect" style="display:none">
+  <div class="shield-select-box">
+    <h2>盾牌を選択 <span id="shieldCount"></span>枚</h2>
+    <p>盾牌エリアの牌をクリックで手牌に戻せます。手牌エリアの牌をクリックで盾牌に追加します。</p>
+    <div class="shield-round-context">
+      <div><span class="shield-context-label">自風</span><strong id="shieldSeatWind"></strong></div>
+      <div class="shield-dora-context">
+        <span class="shield-context-label">ドラ表示牌</span>
+        <div id="shieldDoraIndicators" class="tile-row"></div>
+      </div>
+    </div>
+    <div class="shield-section">
+      <div class="shield-section-label">盾牌（<span id="shieldSelectedCount">0</span> / <span id="shieldCount2"></span>枚）</div>
+      <div id="shieldSelectedTiles" class="tile-row shield-zone"></div>
+    </div>
+    <div class="shield-section">
+      <div class="shield-section-label">手牌</div>
+      <div id="shieldPool" class="tile-row hand-zone"></div>
+    </div>
+    <div id="shieldTimer" class="timer"></div>
+    <button id="btnConfirmShields" class="btn btn-primary" disabled>確定</button>
+  </div>
+</div>
+
+<!-- Game Table -->
+<div id="gameTable" style="display:none">
+  <div id="table-wrap">
+    <!-- Outer player elements: hand, shields and melds only -->
+    <div id="area-top" class="player-area area-top">
+      <div class="hand-row opponent-hand" id="hand-top"></div>
+      <div class="shield-row" id="shields-top"></div>
+      <div class="melds-row" id="melds-top"></div>
+    </div>
+
+    <div id="area-left" class="player-area area-left">
+      <div class="melds-col" id="melds-left"></div>
+      <div class="hand-col opponent-hand" id="hand-left"></div>
+      <div class="shield-col" id="shields-left"></div>
+    </div>
+
+    <div id="area-right" class="player-area area-right">
+      <div class="shield-col" id="shields-right"></div>
+      <div class="hand-col opponent-hand" id="hand-right"></div>
+      <div class="melds-col" id="melds-right"></div>
+    </div>
+
+    <!-- Center information -->
+    <div id="center">
+      <div id="round-info"></div>
+      <div id="counter-info">
+        <span id="honba-info">0本場</span>
+        <span id="deposit-info">供託0</span>
+      </div>
+      <div id="remaining-info"></div>
+      <div id="dora-area">
+        <div class="dora-label">ドラ表示牌</div>
+        <div id="dora-indicators" class="tile-row"></div>
+      </div>
+    </div>
+
+    <!-- Names and scores surround the center panel -->
+    <div id="score-panel-top" class="score-panel score-panel-horizontal score-panel-top">
+      <span class="player-label" id="label-top"></span>
+      <span class="player-score" id="score-top"></span>
+    </div>
+    <div id="score-panel-left" class="score-panel score-panel-vertical score-panel-left">
+      <span class="player-label" id="label-left"></span>
+      <span class="player-score" id="score-left"></span>
+    </div>
+    <div id="score-panel-right" class="score-panel score-panel-vertical score-panel-right">
+      <span class="player-label" id="label-right"></span>
+      <span class="player-score" id="score-right"></span>
+    </div>
+    <div id="score-panel-bottom" class="score-panel score-panel-horizontal score-panel-bottom">
+      <span class="player-label" id="label-me"></span>
+      <span class="player-score" id="score-me"></span>
+      <span id="riichi-indicator" style="display:none">R</span>
+    </div>
+
+    <!-- Rivers stay tightly grouped around center -->
+    <div id="center-discards-top" class="center-discards"></div>
+    <div id="center-discards-left" class="center-discards"></div>
+    <div id="center-discards-right" class="center-discards"></div>
+    <div id="center-discards-bottom" class="center-discards"></div>
+
+    <!-- Bottom player -->
+    <div id="area-me" class="player-area area-me">
+      <div id="my-hand" class="hand-row">
+        <div id="my-hand-tiles" class="tile-row"></div>
+        <div id="my-drawn-tile" class="drawn-tile"></div>
+      </div>
+      <div id="my-shields" class="shield-row shield-rack">
+        <span class="label">盾</span>
+        <div id="my-shield-tiles"></div>
+      </div>
+      <div id="my-melds" class="melds-row"></div>
+    </div>
+
+    <!-- Action buttons -->
+    <div id="action-panel">
+      <div id="turn-countdown" style="display:none"></div>
+      <div id="claim-countdown" style="display:none"></div>
+      <div id="action-buttons"></div>
+      <div id="action-hint"></div>
+      <div id="chi-choice-popup" style="display:none"></div>
+    </div>
+
+    <div id="round-reveal-banner" style="display:none"></div>
+
+    <div id="audio-controls">
+      <button id="audio-mute" type="button" aria-label="音声をミュート">音</button>
+      <button id="audio-settings-toggle" type="button" aria-label="音声設定">設定</button>
+      <div id="audio-settings-panel" style="display:none">
+        <label>全体 <input id="audio-master" type="range" min="0" max="100" step="1"></label>
+        <label>操作音 <input id="audio-operation" type="range" min="0" max="100" step="1"></label>
+        <label>通知音 <input id="audio-notification" type="range" min="0" max="100" step="1"></label>
+        <label>盾牌音 <input id="audio-shield" type="range" min="0" max="100" step="1"></label>
+        <label>結果音 <input id="audio-result" type="range" min="0" max="100" step="1"></label>
+        <label class="audio-check"><input id="audio-background" type="checkbox"> 背景時も通知</label>
+      </div>
+    </div>
+  </div>
+
+  <!-- Overlay for win/round end -->
+  <div id="overlay" style="display:none">
+    <div id="overlay-content"></div>
+    <button id="overlay-close" class="btn btn-primary">続ける</button>
+  </div>
+</div>
+
+<script src="/js/audio-manager.js"></script>
+<script src="/js/app.js"></script>
+</body>
+</html>
