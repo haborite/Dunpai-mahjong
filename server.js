@@ -3,7 +3,7 @@ const express = require('express');
 const http = require('http');
 const WebSocket = require('ws');
 const path = require('path');
-const { createRoom, getRoom } = require('./src/room');
+const { createRoom, getRoom, gameTypeOf, normalizeGameType, GAME_TYPES } = require('./src/rooms');
 
 const app = express();
 const server = http.createServer(app);
@@ -22,17 +22,20 @@ wss.on('connection', (ws) => {
 
     switch (msg.type) {
       case 'create_room': {
-        const room = createRoom(normalizePlayerName(msg.playerName, '東家'), ws, msg.settings || {});
+        const gameType = normalizeGameType(msg.gameType);
+        const room = createRoom(normalizePlayerName(msg.playerName, '東家'), ws, msg.settings || {}, gameType);
         roomId = room.id;
         playerIdx = 0;
         ws.send(JSON.stringify({
           type: 'room_created',
+          gameType,
           roomId,
           playerIdx,
           playerName: room.slots[0].name,
           reconnectToken: room.slots[0].reconnectToken,
           settings: room.settings,
         }));
+        if (room.broadcastLobby) room.broadcastLobby();
         break;
       }
 
@@ -40,6 +43,16 @@ wss.on('connection', (ws) => {
         const requestedRoomId = String(msg.roomId || '').trim().toUpperCase();
         const room = getRoom(requestedRoomId);
         if (!room) { ws.send(JSON.stringify({ type: 'error', message: '部屋が見つかりません' })); return; }
+        const roomType = gameTypeOf(room);
+        if (roomType !== normalizeGameType(msg.gameType)) {
+          ws.send(JSON.stringify({
+            type: 'error',
+            code: 'wrong_game_type',
+            gameType: roomType,
+            message: `この部屋は${GAME_TYPES[roomType].label}の部屋です`,
+          }));
+          return;
+        }
         if (room.isFull) { ws.send(JSON.stringify({ type: 'error', message: '満員です' })); return; }
         const idx = room.addHuman(normalizePlayerName(msg.playerName, `Player${room.playerCount}`), ws);
         if (idx === null) { ws.send(JSON.stringify({ type: 'error', message: '参加できません' })); return; }
@@ -47,17 +60,19 @@ wss.on('connection', (ws) => {
         playerIdx = idx;
         ws.send(JSON.stringify({
           type: 'room_joined',
+          gameType: roomType,
           roomId,
           playerIdx,
           playerName: room.slots[idx].name,
           reconnectToken: room.slots[idx].reconnectToken,
           settings: room.settings,
         }));
-        for (let i = 0; i < 4; i++) {
+        for (let i = 0; i < room.slots.length; i++) {
           if (i !== idx && room.slots[i] && !room.slots[i].isNpc && room.slots[i].ws) {
             room.slots[i].ws.send(JSON.stringify({ type: 'player_joined', playerIdx: idx, name: room.slots[idx].name }));
           }
         }
+        if (room.broadcastLobby) room.broadcastLobby();
         break;
       }
 
@@ -72,7 +87,7 @@ wss.on('connection', (ws) => {
         }
         roomId = requestedRoomId;
         playerIdx = requestedPlayerIdx;
-        ws.send(JSON.stringify({ type: 'room_rejoined', roomId, playerIdx, settings: room.settings }));
+        ws.send(JSON.stringify({ type: 'room_rejoined', gameType: gameTypeOf(room), roomId, playerIdx, settings: room.settings }));
         break;
       }
 
