@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>スーパーチャンタ麻雀</title>
+<link rel="stylesheet" href="/superchanta/superchanta.css">
+</head>
+<body>
+
+<!-- Lobby -->
+<section id="lobby" class="screen">
+  <div class="panel lobby-panel">
+    <h1>スーパーチャンタ麻雀</h1>
+    <p class="subtitle">超帯么九麻雀 — 盾牌とオープン立直のある4人打ち立直麻雀</p>
+    <label class="field">
+      <span>プレイヤー名</span>
+      <input type="text" id="playerName" maxlength="12" value="プレイヤー">
+    </label>
+    <div class="lobby-actions">
+      <button id="btnSolo" class="btn btn-primary">NPCと対局</button>
+      <button id="btnCreate" class="btn">部屋を作成（友人と対局）</button>
+      <div class="join-row">
+        <input type="text" id="roomIdInput" placeholder="部屋ID" maxlength="6" autocomplete="off">
+        <button id="btnJoin" class="btn">参加</button>
+      </div>
+    </div>
+    <div id="lobbyStatus" class="status-msg"></div>
+    <details class="rules">
+      <summary>ルール概要</summary>
+      <ul>
+        <li>4人打ちの立直麻雀（じゃんたまルールがベース）。符計算・満貫以上の段階・本場・供託は通常どおり。</li>
+        <li><strong>0点スタート</strong>。マイナスになっても続行し、点数に関係なく立直できます。</li>
+        <li>東風戦から始め、<strong>東4局（4人目の親）以降</strong>は「その局の配牌時点で単独トップだった人が、その局で和了して得点を得た」ときに即終了。終わらなければ南→西→北→東…と続きます。</li>
+        <li><strong>盾牌</strong>：一局に一度だけ、打牌を河ではなく自分の盾牌スペースに表向きで置けます（鳴き・ロンの対象になりません）。誰かがツモ和了したとき、自分の盾牌がその人の待ち牌なら支払いが0点になります。盾牌の牌は自分のフリテンの判定に含まれます。</li>
+        <li><strong>オープン立直</strong>（1翻）：手牌を公開して立直。オープン立直者のツモ和了には盾牌の効果が効きません。</li>
+        <li>食い替えあり。赤ドラは各色の3と7に1枚ずつ（計6枚）。</li>
+        <li>主な翻数（門前／副露）：混全帯么九 4/3、純全帯么九 6/5、一気通貫 4/3、三色同順 3/2、一盃口 2/1・二盃口 6/5（鳴いても可）、三色同刻 6、混老頭 6、七対子 3（同じ牌4枚使いも可）、一槓子 1、二槓子 2、三槓子 役満、四槓子 ダブル役満。</li>
+        <li>追加役：十二落抬 1（4副露の単騎）、五門斉 2（萬筒索・風牌・三元牌をすべて含む）、一色三順 4/3（同じ色の同じ順子3組）、三連刻 4/3（同じ色の連続した刻子3組）、大于五 2/1（6〜9の数牌だけ）、小于五 2/1（1〜4の数牌だけ）。</li>
+        <li>役の翻数と盾牌スペースの枚数は、「部屋を作成」後の設定画面で変更できます。「NPCと対局」は前回の設定（初回は初期値）ですぐに始まります。</li>
+      </ul>
+    </details>
+    <p class="other-games"><a href="/">盾麻雀</a> ・ <a href="/luojong/">裸雀</a></p>
+  </div>
+</section>
+
+<!-- Waiting room -->
+<section id="waiting" class="screen" hidden>
+  <div class="panel lobby-panel wide">
+    <h2>待機中</h2>
+    <p>部屋ID: <strong id="displayRoomId" class="room-id"></strong>
+      <button id="btnCopyLink" class="btn btn-small">招待リンクをコピー</button></p>
+    <ul id="playerList" class="player-list"></ul>
+    <button id="btnStart" class="btn btn-primary" hidden>対局開始</button>
+    <p id="waitStatus" class="status-msg"></p>
+    <fieldset class="settings-box">
+      <legend>持ち時間</legend>
+      <label class="ts-check"><input type="checkbox" id="setUnlimited"> 無制限</label>
+      <div class="ts-row">
+        <label>標準 <select id="setStandard"></select> 秒</label>
+        <label>予備 <select id="setReserve"></select> 秒</label>
+      </div>
+      <p class="ts-note">標準時間は操作ごとに元に戻ります。予備時間は標準時間を使い切ったあとに減り、局ごとに初期化されます。時間切れになると、ツモ切りまたはパスが自動で行われます。</p>
+    </fieldset>
+    <fieldset class="settings-box">
+      <legend>盾牌</legend>
+      <div class="ts-row">
+        <label>盾牌スペース <select id="setShieldSlots"></select> 枚</label>
+      </div>
+      <p class="ts-note">盾牌スペース1枚につき、一局に一度、打牌を盾牌スペースに置けます（初期値 1枚）。</p>
+    </fieldset>
+    <fieldset class="settings-box">
+      <legend>役の翻数 <button id="btnYakuReset" class="btn btn-small" type="button">初期値に戻す</button></legend>
+      <p class="ts-note">0 にするとその役はなし。役満の行は役満の倍数（1 = 役満、2 = ダブル役満）。「—」は成立しない状態です。</p>
+      <div id="yakuTable" class="yaku-table"></div>
+    </fieldset>
+    <p id="settingsNote" class="ts-note"></p>
+  </div>
+</section>
+
+<!-- Game -->
+<section id="game" class="screen" hidden>
+  <header id="topbar">
+    <div class="round-info">
+      <span id="roundLabel" class="round-label"></span>
+      <span id="honbaLabel"></span>
+      <span id="kyoutakuLabel"></span>
+      <span id="endLabel" class="end-label"></span>
+    </div>
+    <div class="dora-info"><span class="label">ドラ表示</span><span id="topDora" class="tile-row tiny"></span></div>
+    <div class="remain-info">残り <strong id="remainCount">0</strong> 枚</div>
+    <div class="toggles">
+      <span id="timeLabel" class="time-label"></span>
+      <label><input type="checkbox" id="optNoCall"> 鳴きなし</label>
+      <label><input type="checkbox" id="optAutoWin"> 自動和了</label>
+      <button id="btnMute" class="btn btn-small" type="button">音</button>
+    </div>
+  </header>
+
+  <main id="board">
+    <section class="seat seat-top" id="seat-2"></section>
+    <section class="seat seat-left" id="seat-3"></section>
+    <section class="seat seat-right" id="seat-1"></section>
+    <section id="center">
+      <div class="river river-top" id="river-2"></div>
+      <div class="river river-left" id="river-3"></div>
+      <div class="center-info" id="centerInfo"></div>
+      <div class="river river-right" id="river-1"></div>
+      <div class="river river-bottom" id="river-0"></div>
+    </section>
+    <section class="seat seat-bottom" id="seat-0"></section>
+  </main>
+
+  <section id="action-bar">
+    <div id="timer" class="timer" hidden></div>
+    <div id="actionButtons" class="action-buttons"></div>
+    <div id="actionHint" class="action-hint"></div>
+  </section>
+</section>
+
+<div id="overlay" hidden>
+  <div id="overlayContent" class="panel overlay-panel"></div>
+</div>
+
+<div id="toast" class="toast" hidden></div>
+
+<script src="/js/audio-manager.js"></script>
+<script src="/superchanta/superchanta.js"></script>
+</body>
+</html>

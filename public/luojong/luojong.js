@@ -142,9 +142,10 @@
         onState(msg);
         break;
       case 'error':
-        if (msg.code === 'wrong_game_type' && msg.gameType === 'dunpai') {
+        if (msg.code === 'wrong_game_type' && (msg.gameType === 'dunpai' || msg.gameType === 'superchanta')) {
+          const [label, href] = msg.gameType === 'dunpai' ? ['盾麻雀', '/'] : ['スーパーチャンタ麻雀', '/superchanta/'];
           $('lobbyStatus').innerHTML = '';
-          $('lobbyStatus').append(msg.message + '。 ', Object.assign(el('a', '', '盾麻雀のページへ'), { href: '/' }));
+          $('lobbyStatus').append(msg.message + '。 ', Object.assign(el('a', '', `${label}のページへ`), { href }));
         } else if (!$('lobby').hidden) {
           $('lobbyStatus').textContent = msg.message;
         } else {

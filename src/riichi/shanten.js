@@ -92,9 +92,15 @@ function shantenStandard(c, nMelds) {
   return best;
 }
 
-function shantenChiitoi(c) {
+// quads=true: 同種4枚を2対子として数える七対子（スーパーチャンタ麻雀など）
+function shantenChiitoi(c, quads = false) {
   let pairs = 0, kinds = 0;
-  for (const v of c) { if (v >= 1) kinds++; if (v >= 2) pairs++; }
+  for (const v of c) {
+    if (v >= 1) kinds++;
+    if (quads) pairs += v >> 1;
+    else if (v >= 2) pairs++;
+  }
+  if (quads) return 6 - Math.min(pairs, 7);
   return 6 - pairs + Math.max(0, 7 - kinds);
 }
 
@@ -105,24 +111,25 @@ function shantenKokushi(c) {
   return 13 - uniq - pair;
 }
 
-function shantenFromCounts(c, nMelds = 0) {
+// opts.chiitoiQuads: 七対子で同種4枚使いを認める
+function shantenFromCounts(c, nMelds = 0, opts = null) {
   let s = shantenStandard(c, nMelds);
-  if (nMelds === 0) s = Math.min(s, shantenChiitoi(c), shantenKokushi(c));
+  if (nMelds === 0) s = Math.min(s, shantenChiitoi(c, !!(opts && opts.chiitoiQuads)), shantenKokushi(c));
   return s;
 }
 
-function shanten(tiles, nMelds = 0) {
-  return shantenFromCounts(toCounts(tiles), nMelds);
+function shanten(tiles, nMelds = 0, opts = null) {
+  return shantenFromCounts(toCounts(tiles), nMelds, opts);
 }
 
 // Tile kinds that complete the hand (hand length must be 13 - 3*nMelds).
-function waitKinds(tiles, nMelds = 0) {
+function waitKinds(tiles, nMelds = 0, opts = null) {
   const c = toCounts(tiles);
   const out = [];
   for (let i = 0; i < 34; i++) {
     if (c[i] >= 4) continue; // 自分で4枚使っている牌は待ちにならない
     c[i]++;
-    if (shantenFromCounts(c, nMelds) === -1) out.push(indexToKind(i));
+    if (shantenFromCounts(c, nMelds, opts) === -1) out.push(indexToKind(i));
     c[i]--;
   }
   return out;
