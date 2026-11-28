@@ -92,7 +92,7 @@ function shantenStandard(c, nMelds) {
   return best;
 }
 
-// quads=true: 同種4枚を2対子として数える七対子（スーパーチャンタ麻雀など）
+// quads=true: 同種4枚を2対子として数える七対子
 function shantenChiitoi(c, quads = false) {
   let pairs = 0, kinds = 0;
   for (const v of c) {

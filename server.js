@@ -10,6 +10,11 @@ const server = http.createServer(app);
 const wss = new WebSocket.Server({ server });
 
 app.use(express.static(path.join(__dirname, 'public')));
+// スーパーチャンタ麻雀は独立したサイトへ移転
+app.get(['/superchanta', '/superchanta/'], (req, res) => {
+  const q = req.originalUrl.indexOf('?');
+  res.redirect(301, 'https://superchanta.haborite.com/' + (q >= 0 ? req.originalUrl.slice(q) : ''));
+});
 app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'public', 'index.html')));
 
 wss.on('connection', (ws) => {

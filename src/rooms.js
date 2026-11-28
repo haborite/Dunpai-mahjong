@@ -1,19 +1,17 @@
 'use strict';
-// Room registry across game types (盾麻雀 = 'dunpai', 裸雀 = 'luojong',
-// スーパーチャンタ麻雀 = 'superchanta').
+// Room registry across game types (盾麻雀 = 'dunpai', 裸雀 = 'luojong').
+// スーパーチャンタ麻雀は superchanta.haborite.com（別リポジトリ）に移った。
 
 const { v4: uuidv4 } = require('uuid');
 const dunpai = require('./room');
 const { LuojongRoom } = require('./games/luojong/room');
-const { SuperChantaRoom } = require('./games/superchanta/room');
 
 const GAME_TYPES = {
   dunpai: { label: '盾麻雀' },
   luojong: { label: '裸雀' },
-  superchanta: { label: 'スーパーチャンタ麻雀' },
 };
 
-const ROOM_CLASSES = { luojong: LuojongRoom, superchanta: SuperChantaRoom };
+const ROOM_CLASSES = { luojong: LuojongRoom };
 
 const variantRooms = new Map();
 
